@@ -1,0 +1,50 @@
+     1                                  
+     2                                  bits 32 ;assembling for the 32 bits architecture
+     3                                  ; the start label will be the entry point in the program
+     4                                  global  start 
+     5                                  
+     6                                  extern  exit ; we inform the assembler that the exit symbol is foreign, i.e. it exists even if we won't be defining it
+     7                                  import  exit msvcrt.dll; exit is a function that ends the process, it is defined in msvcrt.dll
+     8                                          ; msvcrt.dll contains exit, printf and all the other important C-runtime functions
+     9                                  segment  data use32 class=data ; the data segment where the variables are declared 
+    10                                      
+    11 00000000 01                          a db 1;
+    12 00000001 0200                        b dw 2;
+    13 00000003 03                          c db 3;
+    14 00000004 04000000                    d dd 4;
+    15 00000008 0500000000000000            x dq 5;
+    16                                      
+    17                                      
+    18                                  segment  code use32 class=code ; code segment
+    19                                  start: 
+    20                                  
+    21                                      ; (a*b+2) / (a+7-c) + d + x
+    22                                      
+    23                                      ; (a*b+2)
+    24 00000000 A0[00000000]                mov AL, [a];
+    25 00000005 6698                        CBW;
+    26 00000007 66F72D[01000000]            imul word [b];
+    27 0000000E 6683C002                    add AX, 2;
+    28                                      
+    29                                      ; (a+7-c)
+    30 00000012 8A1D[00000000]              mov BL, [a];
+    31 00000018 80C307                      add BL, 7;
+    32 0000001B 2A1D[03000000]              sub BL, [c];
+    33                                      
+    34                                      ; (a*b+2) / (a+7-c)
+    35 00000021 F6FB                        idiv BL;
+    36                                      
+    37                                      ; (a*b+2) / (a+7-c) + d
+    38 00000023 6699                        CWD;
+    39 00000025 660305[04000000]            add AX, word [d]
+    40 0000002C 661315[06000000]            adc DX, word [d+2]
+    41                                      
+    42                                      ; (a*b+2) / (a+7-c) + d + x
+    43 00000033 98                          CWDE;
+    44 00000034 99                          CDQ;
+    45 00000035 0305[08000000]              add EAX, dword [x];
+    46 0000003B 1315[0C000000]              adc EDX, dword [x+4];
+    47                                      
+    48                                      
+    49 00000041 6A00                         push dword 0 ;saves on stack the parameter of the function exit
+    50 00000043 FF15[00000000]               call [exit] ;function exit is called in order to end the execution ofthe program	

@@ -1,0 +1,7 @@
+(defun elimE (l e)
+  (cond
+   ((equal e l) nil)
+   ((atom l) (list l))
+   ((listp l) (list (mapcan (lambda (arg) (elimE arg e)) l)))
+   )
+)

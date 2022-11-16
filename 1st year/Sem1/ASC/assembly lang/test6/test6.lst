@@ -1,0 +1,97 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit,fprintf,fread,fopen,fclose,printf               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  import fprintf msvcrt.dll
+    11                                  import fread msvcrt.dll
+    12                                  import fopen msvcrt.dll
+    13                                  import printf msvcrt.dll
+    14                                  import fclose msvcrt.dll
+    15                                  ; our data is declared here (the variables needed by our program)
+    16                                  segment data use32 class=data
+    17                                      ; ...
+    18 00000000 666973696572312E74-         file_name1 db 'fisier1.txt',0
+    18 00000009 787400             
+    19 0000000C 666973696572322E74-         file_name2 db 'fisier2.txt',0
+    19 00000015 787400             
+    20 00000018 257300                      format_string db '%s',0
+    21 0000001B 256300                      format_char db '%c',0
+    22 0000001E 7200                        access_mode1 db 'r',0
+    23 00000020 7700                        access_mode2 db 'w',0
+    24 00000022 FFFFFFFF                    file_descript1 dd -1
+    25 00000026 FFFFFFFF                    file_descript2 dd -1
+    26 0000002A 01000000                    nr_prop dd 1
+    27 0000002E 00000000                    starting dd 0
+    28 00000032 00<rept>                    text times 100 db 0
+    29                                      
+    30                                      
+    31                                  ; our code starts here
+    32                                  segment code use32 class=code
+    33                                      
+    34                                      start:
+    35                                          ; ...
+    36 00000000 68[1E000000]                    push access_mode1
+    37 00000005 68[00000000]                    push file_name1
+    38 0000000A FF15[00000000]                  call [fopen]
+    39 00000010 83C408                          add esp, 8
+    40                                          
+    41 00000013 83F800                          cmp eax, 0
+    42 00000016 0F8487000000                    je final
+    43 0000001C A3[22000000]                    mov [file_descript1],eax
+    44                                          
+    45 00000021 FF35[22000000]                  push dword[file_descript1]
+    46 00000027 6A64                            push 100
+    47 00000029 6A01                            push 1
+    48 0000002B 68[32000000]                    push text
+    49 00000030 FF15[00000000]                  call [fread]
+    50                                          
+    51 00000036 B302                            mov bl, 2
+    52 00000038 BE[32000000]                    mov esi, text
+    53 0000003D C705[2E000000]-                 mov dword[starting] , text
+    53 00000043 [32000000]         
+    54                                          
+    55                                          parse:
+    56 00000047 AC                              lodsb 
+    57 00000048 3C00                            cmp al, 0
+    58 0000004A 7448                            je gata_text
+    59 0000004C 3C2E                            cmp al, '.'
+    60 0000004E 7542                            jne interior_prop
+    61                                          
+    62 00000050 C646FF00                        mov byte[esi-1],0
+    63 00000054 66A1[2A000000]                  mov ax, word[nr_prop]
+    64 0000005A F6F3                            div bl
+    65 0000005C 80FC01                          cmp ah, 1
+    66 0000005F 7524                            jne nu_print
+    67                                          
+    68 00000061 FF35[2E000000]                  push dword[starting]
+    69 00000067 68[18000000]                    push format_string
+    70 0000006C FF15[00000000]                  call [printf]
+    71 00000072 83C408                          add esp, 8
+    72                                          
+    73 00000075 6A2E                            push '.'
+    74 00000077 68[1B000000]                    push format_char
+    75 0000007C FF15[00000000]                  call [printf]
+    76 00000082 83C408                          add esp, 8
+    77                                          
+    78                                          nu_print:
+    79 00000085 8935[2E000000]                  mov [starting],esi
+    80 0000008B 66FF05[2A000000]                inc word[nr_prop]
+    81                                          interior_prop:
+    82 00000092 EBB3                            jmp parse
+    83                                          
+    84                                          gata_text:
+    85                                          
+    86 00000094 FF35[22000000]                  push dword[file_descript1]
+    87 0000009A FF15[00000000]                  call [fclose]
+    88 000000A0 83C404                          add esp, 4
+    89                                          
+    90                                          final:
+    91                                      
+    92                                          ; exit(0)
+    93 000000A3 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    94 000000A5 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

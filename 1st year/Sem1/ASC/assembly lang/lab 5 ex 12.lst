@@ -1,0 +1,70 @@
+     1                                  
+     2                                  bits 32 ;assembling for the 32 bits architecture
+     3                                  ; the start label will be the entry point in the program
+     4                                  global  start 
+     5                                  
+     6                                  extern  exit ; we inform the assembler that the exit symbol is foreign, i.e. it exists even if we won't be defining it
+     7                                  import  exit msvcrt.dll; exit is a function that ends the process, it is defined in msvcrt.dll
+     8                                          ; msvcrt.dll contains exit, printf and all the other important C-runtime functions
+     9                                  segment  data use32 class=data ; the data segment where the variables are declared 
+    10 00000000 616263646566                 s1 db 'a', 'b', 'c', 'd', 'e', 'f' ; declare the string of bytes
+    11 00000006 3132333435                   s2 db '1', '2', '3', '4', '5' ; 
+    12                                  	 l1 equ $-s1 ; compute the length of the string 1 in l1
+    13                                       l2 equ $-s2 ; compute the length of the string 2 in l2
+    14 0000000B 00<rept>                	 d times l1 db 0 ; reserve l1+l2 bytes for the destination string and initialize it
+    15                                  segment  code use32 class=code ; code segment
+    16                                  start: 
+    17                                  
+    18                                       ; Two character strings S1 and S2 are given. Obtain the string D by concatenating the elements found on even positions in S2 and the elements ; ; ; found on odd positions in S1.
+    19                                       ; The result should be D: '2','4','a','c','e'
+    20                                       ;                          32, 34, 61, 63, 65
+    21                                       
+    22 00000000 B905000000                   mov ecx, l2 ; we put the length l2 in ECX in order to make the loop
+    23 00000005 BE00000000              	 mov esi, 0 ;
+    24 0000000A BB00000000                   mov ebx, 0 ; the position in which we will put the numbers in d
+    25 0000000F E322                    	 jecxz endFor      
+    26                                  	 forIndex
+    26          ******************       warning: label alone on a line without a colon might be in error [-w+orphan-labels]
+    27 00000011 66B80000                        mov ax, 0;
+    28 00000015 89F2                    		mov edx, esi;
+    29 00000017 88D0                            mov al, dl;
+    30 00000019 B202                            mov dl, 2; division by 2 to see if the number is even or odd 
+    31 0000001B F6F2                            div dl;
+    32 0000001D B001                            mov al, 1;
+    33 0000001F 38C4                            cmp ah,al;
+    34 00000021 750D                            jne evenPos
+    35 00000023 8A86[06000000]                  mov al, [s2+esi]
+    36 00000029 8883[0B000000]          		mov [d+ebx], al;
+    37 0000002F 43                              inc ebx;
+    38                                          evenPos:
+    39 00000030 46                      		inc esi
+    40 00000031 E2DE                    	 loop forIndex
+    41                                  	 endFor:
+    42                                       
+    43 00000033 B90B000000                   mov ecx, l1 ; 
+    44 00000038 83E905                       sub ecx, l2 ; we put the length l1 in ECX in order to make the loop
+    45 0000003B BE00000000                   mov esi, 0;
+    46                                       
+    47 00000040 E322                    	 jecxz endFor1      
+    48                                  	 forIndex1
+    48          ******************       warning: label alone on a line without a colon might be in error [-w+orphan-labels]
+    49 00000042 66B80000                        mov ax, 0;
+    50 00000046 89F2                            mov edx, esi;
+    51 00000048 88D0                    		mov al, dl;        
+    52 0000004A B202                    		mov dl, 2; division by 2 to see if the number is even or odd
+    53 0000004C F6F2                            div dl;
+    54 0000004E B000                            mov al, 0
+    55 00000050 38E0                            cmp al,ah
+    56 00000052 750D                            jne oddPos
+    57 00000054 8A86[00000000]                  mov al, [s1+esi]
+    58 0000005A 8883[0B000000]                  mov [d+ebx], al;
+    59 00000060 43                              inc ebx;
+    60                                          oddPos:
+    61 00000061 46                              inc esi
+    62 00000062 E2DE                    	 loop forIndex1
+    63                                  	 endFor1:
+    64 00000064 A1[0B000000]                 mov eax, dword [d]
+    65 00000069 8B15[0F000000]               mov edx, dword [d+4]
+    66                                  
+    67 0000006F 6A00                         push dword 0 ;saves on stack the parameter of the function exit
+    68 00000071 FF15[00000000]               call [exit] ;function exit is called in order to end the execution ofthe program	

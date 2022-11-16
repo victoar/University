@@ -1,0 +1,88 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                   
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                   
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                   
+    10                                  extern printf                          ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    11                                  import printf msvcrt.dll
+    12                                   
+    13                                  ; our data is declared here (the variables needed by our program)
+    14                                  segment data use32 class=data
+    15                                      ; ...
+    16 00000000 616C696E6100                sir1 db "alina",0
+    17 00000006 05                          lungsir1 db $-sir1-1
+    18 00000007 64726167616C696E61-         sir2 db "dragalina",0
+    18 00000010 00                 
+    19 00000011 09                          lungsir2 db $-sir2-1
+    20 00000012 62616E616E6100              sir3 db "banana",0
+    21 00000019 06                          lungsir3 db $-sir3-1
+    22 0000001A 00                          lungime db 0
+    23 0000001B 00<rept>                    rezultat times 50 db 0
+    24 0000004D 00<rept>                    rezultat_final times 50 db 0
+    25 0000007F 5375666978756C2064-         format1 db "Sufixul de lungime maxima, comun este: %s \n", 0
+    25 00000088 65206C756E67696D65-
+    25 00000091 206D6178696D612C20-
+    25 0000009A 636F6D756E20657374-
+    25 000000A3 653A202573205C6E00 
+    26 000000AC 00                          contor db 0
+    27                                  ; our code starts here
+    28                                  segment code use32 class=code
+    29                                      start:
+    30                                          ; ...
+    31                                   
+    32                                              ; call exit to terminate the program
+    33 00000000 8A0D[06000000]              mov cl, [lungsir1]
+    34 00000006 8A1D[11000000]              mov bl, [lungsir2]
+    35 0000000C 38D9                        cmp cl, bl; vedem care sir este mai scurt
+    36 0000000E 7202                        jb .lung1
+    37 00000010 88D9                        mov cl, bl
+    38                                      .lung1:
+    39 00000012 BE[00000000]                mov esi, sir1
+    40 00000017 BF[07000000]                mov edi, sir2
+    41                                   
+    42 0000001C 880D[AC000000]              mov [contor], cl
+    43 00000022 FE0D[AC000000]              dec byte[contor]
+    44 00000028 8B1D[AC000000]              mov ebx, [contor]
+    45                                   
+    46                                      .for1:
+    47 0000002E 52                          push edx
+    48 0000002F 8A041E                      mov al, [esi+ebx]
+    49 00000032 8A97[AC000000]              mov dl, [edi+contor]
+    50 00000038 38D0                        cmp al, dl; verificam daca literele sunt egale
+    51 0000003A 7515                        jne .break1
+    52 0000003C 5A                          pop edx
+    53 0000003D 8882[1A000000]              mov [edx+lungime], al
+    54 00000043 FE0D[AC000000]              dec byte[contor]
+    55 00000049 FE05[1A000000]              inc byte[lungime]
+    56 0000004F E2DD                        loop .for1
+    57                                   
+    58                                      .break1:
+    59 00000051 89D6                        MOV ESI, edx
+    60 00000053 BF[4D000000]                MOV EDI, rezultat_final
+    61 00000058 B900000000                  mov ecx, 0
+    62 0000005D 8A0D[1A000000]              MOV cl, [lungime] 
+    63                                   
+    64 00000063 FE0D[1A000000]              dec byte[lungime]
+    65 00000069 0335[1A000000]              add ESI, [lungime] 
+    66                                   
+    67 0000006F E306                        Jecxz .Final 
+    68                                      .Repeta: 
+    69 00000071 FD                          Std 
+    70 00000072 AC                          Lodsb 
+    71 00000073 FC                          cld 
+    72 00000074 AA                          Stosb 
+    73 00000075 E2FA                        Loop .Repeta 
+    74                                      .Final: 
+    75                                   
+    76 00000077 68[4D000000]                push rezultat_final
+    77 0000007C 68[7F000000]            	push format1
+    78 00000081 FF15[00000000]          	call [printf]
+    79 00000087 83C408                  	add esp, 2*4
+    80                                   
+    81                                        ; exit(0)
+    82 0000008A 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    83 0000008C FF15[00000000]                  call    [exit] 

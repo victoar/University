@@ -1,0 +1,7 @@
+(defun nodNivelPar (tree curr)
+  (cond 
+   ((and (= 0 (mod curr 2)) (atom tree)) (list tree))
+   ((atom tree) nil)
+   ((listp tree) (mapcan (lambda(arg) (nodNivelPar arg (+ curr 1))) tree))
+   )
+)

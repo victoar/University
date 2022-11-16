@@ -1,0 +1,66 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit , scanf, printf              ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                  import scanf msvcrt.dll                          ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  import fprintf msvcrt.dll
+    11                                  import printf msvcrt.dll
+    12                                  
+    13                                  ; our data is declared here (the variables needed by our program)
+    14                                  segment data use32 class=data
+    15                                      ; ...
+    16                                      
+    17 00000000 312D696D7061725F6E-         file_name db "1-impar_neg.txt", 0
+    17 00000009 65672E74787400     
+    18 00000010 256400                      number_format db "%d", 0
+    19 00000013 25642000                    print_format db "%d ", 0
+    20 00000017 00000000                    counter dd 0
+    21 0000001B 00000000                    nr dd 0
+    22 0000001F 00000000<rept>              numbers times 20 dd 0
+    23                                      
+    24                                  ; our code starts here
+    25                                  segment code use32 class=code
+    26                                      start:
+    27                                          ; ...
+    28                                          
+    29 00000000 BB00000000                      mov ebx, 0
+    30                                          read_loop:
+    31 00000005 53                                  push ebx
+    32 00000006 68[1B000000]                        push dword nr
+    33 0000000B 68[10000000]                        push dword number_format
+    34 00000010 FF15[00000000]                      call [scanf]
+    35 00000016 83C408                              add ESP, 4*2
+    36                                              
+    37 00000019 833D[1B000000]00                    cmp dword [nr], 0
+    38 00000020 740E                                je exit_loop
+    39                                              
+    40 00000022 5B                                  pop ebx
+    41 00000023 A1[1B000000]                        mov eax, [nr]
+    42 00000028 A3[1F000000]                        mov [numbers], eax    
+    43 0000002D 43                                  inc ebx
+    44                                                  
+    45 0000002E EBD5                            jmp read_loop
+    46                                          exit_loop:
+    47                                  
+    48 00000030 BB00000000                      mov ebx, 0
+    49                                          print_loop:
+    50                                          
+    51 00000035 39CB                                cmp ebx, ecx
+    52 00000037 7417                                je exit_print_loop
+    53                                              
+    54 00000039 FFB3[1F000000]                      push dword [numbers+ebx]
+    55 0000003F 68[13000000]                        push dword print_format
+    56 00000044 FF15[00000000]                      call [printf]
+    57 0000004A 83C408                              add ESP, 4*2
+    58 0000004D 43                                  inc ebx
+    59                                          
+    60 0000004E EBE5                            jmp print_loop
+    61                                          exit_print_loop:
+    62                                      
+    63                                          ; exit(0)
+    64 00000050 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    65 00000052 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

@@ -1,0 +1,9 @@
+(defun merge (l k)
+  (cond
+   ( (null l ) k)
+   ( (null k) l)
+   ( (< (car l) (car k)) (cons (car l) (merge (cdr l) k)))
+   ( (> (car l) (car k)) (cons (car k) (merge l (cdr k))))
+   ( (= (car l) (car k)) (cons (car l) cons(car k) (merge (cdr l) (cdr k))))
+   )
+)

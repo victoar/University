@@ -1,0 +1,52 @@
+     1                                  ;Given an array A of doublewords, build two arrays of bytes:  
+     2                                  ;  - array B1 contains as elements the lower part of the lower words from A
+     3                                  ;  - array B2 contains as elements the higher part of the higher words from A
+     4                                  
+     5                                  
+     6                                  
+     7                                  bits 32 
+     8                                  global start
+     9                                  extern exit; tell nasm that exit exists even if we won't be defining it
+    10                                  import exit msvcrt.dll; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  segment data use32 class=data
+    13                                  	
+    14 00000000 2C1A34127812FC98            A dd 12341A2Ch , 98FC1278h
+    15                                      len equ ($ - A)/4 ; len = length of the string A (in doublewords)= 2
+    16 00000008 00<rept>                    B1 times len db 0 ; B1 = len = length of the string A = 2
+    17 0000000A 00<rept>                    B2 times len db 0 ; B2 = len = length of the string A = 2
+    18                                      
+    19                                  ; our code starts here
+    20                                  segment code use32 class=code
+    21                                      start:
+    22                                      
+    23                                      ;  - array B1 contains as elements the lower part of the lower words from A
+    24 00000000 BE[00000000]                mov ESI, A
+    25 00000005 B902000000                  mov ECX, len
+    26 0000000A BF[08000000]                mov EDI, B1
+    27 0000000F FC                          cld
+    28                                      repeta:
+    29 00000010 66AD                        lodsw ; loads in AX the lower word from A
+    30 00000012 B400                        mov AH, 0 ; we don't need the higher part of the lower word
+    31 00000014 AA                          stosb ; store AL that contains the lower byte
+    32 00000015 66AD                        lodsw ; this loads in AX the higher word
+    33 00000017 E2F7                        loop repeta
+    34                                      
+    35                                      ;  - array B2 contains as elements the higher part of the higher words from A
+    36 00000019 BE[00000000]                mov ESI, A
+    37 0000001E B902000000                  mov ECX, len
+    38 00000023 BF[0A000000]                mov EDI, B2
+    39                                      repeta2:
+    40 00000028 66AD                        lodsw ; this loads in AX the lower word from A
+    41 0000002A 66AD                        lodsw ; this loads in AX the lower word from A
+    42 0000002C 66C1E808                    shr AX, 8 ; we shift to right with 8 positions to get AH
+    43 00000030 AA                          stosb ; store AL that contains the higher byte
+    44 00000031 E2F5                        loop repeta2
+    45                                      
+    46                                  	
+    47                                  
+    48                                  sfarsit:;end the program
+    49                                             
+    50 00000033 6A00                            push dword 0; push the parameter for exit onto the stack
+    51 00000035 FF15[00000000]                  call [exit]; call exit to terminate the program
+    52                                          

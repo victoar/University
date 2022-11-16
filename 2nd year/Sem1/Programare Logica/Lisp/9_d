@@ -1,0 +1,14 @@
+(defun cmmdc (x y)
+  (cond
+   ( (= y 0) x)
+   ( t (cmmdc y (mod x y)))
+   )
+)
+
+(defun lcmmdc (l)
+  (cond
+   ( (null l) 0)
+   ( (= (length l) 1) (car l))
+   ( t ( cmmdc (car l) (lcmmdc(cdr l))))
+   )
+)

@@ -1,0 +1,22 @@
+(defun maxLevel (L LEVEL)
+    (cond
+        ((atom L) LEVEL)
+        (t (apply #' max (mapcar #' (lambda (S) (maxLevel S (+ 1 LEVEL))) L)))
+    )
+)
+
+
+(defun findHeight(L MAXLEVEL E)
+  (cond
+      ((and (atom L) (eq L E)) MAXLEVEL)
+      ((and (atom L) (not(eq L E))) -1)
+      (t (apply '*(mapcar #' (lambda (S) (findHeight S (- MAXLEVEL 1) E)) L)))
+   )
+)
+
+
+(defun main(L E)
+  (findHeight L (maxLevel L 0) E)
+)
+
+(print (main '(a (b (g)) (c (d (e)) (f))) 'e ))

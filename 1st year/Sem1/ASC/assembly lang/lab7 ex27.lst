@@ -1,0 +1,72 @@
+     1                                  ; A character string is given (defined in the data segment). 
+     2                                  ; Read one character from the keyboard, then count the number of occurences of that character in the given string and display the character along with its number of occurences.
+     3                                  
+     4                                  bits 32
+     5                                  global start        
+     6                                  
+     7                                  ; declare extern functions used by the program
+     8                                  extern exit, printf, scanf         ; add printf as extern function            
+     9                                  import exit msvcrt.dll    
+    10                                  import printf msvcrt.dll    ; tell the assembler that function printf can be found in library msvcrt.dll
+    11                                  import scanf msvcrt.dll
+    12                                                            
+    13                                  segment data use32 class=data
+    14                                  ; char arrays are of type byte
+    15 00000000 616261636461                    a db 'a' , 'b' , 'a' , 'c' , 'd' , 'a';
+    16                                          len equ ($-a)
+    17 00000006 636861726163746572-             msg db "character = ", 0;
+    17 0000000F 203D2000           
+    18 00000013 2563                            format2 db "%c"
+    19 00000015 546865206368617261-             format db "The character %c,", 0
+    19 0000001E 637465722025632C00 
+    20 00000027 206170706561727320-             format1 dd " appears %d time(s)", 0
+    20 00000030 25642074696D652873-
+    20 00000039 290000000000       
+    21                                          
+    22 0000003F 00                      		c db 0
+    23                                          
+    24                                  segment  code use32 class=code
+    25                                      start:
+    26                                          
+    27 00000000 68[06000000]                    push dword msg
+    28 00000005 FF15[00000000]                  call [printf]
+    29 0000000B 83C404                          add ESP, 4*1
+    30                                          
+    31 0000000E 68[3F000000]                    push dword c
+    32 00000013 68[13000000]                    push dword format2
+    33 00000018 FF15[00000000]                  call [scanf]
+    34 0000001E 83C408                          add ESP, 4*2
+    35                                          
+    36 00000021 BA00000000                      mov EDX, 0
+    37 00000026 8A15[3F000000]                  mov DL, [c]
+    38 0000002C BB00000000                      mov EBX, 0
+    39 00000031 BE00000000                      mov ESI, 0
+    40 00000036 B906000000                      mov ECX, len
+    41 0000003B E30E                            jecxz endFor
+    42                                          forIndex
+    42          ******************       warning: label alone on a line without a colon might be in error [-w+orphan-labels]
+    43 0000003D 8A86[00000000]                      mov AL, [a+ESI]
+    44 00000043 38D0                                cmp AL, DL
+    45 00000045 7501                                JNE equal
+    46 00000047 43                                      inc EBX
+    47                                              equal:
+    48 00000048 46                                  inc ESI
+    49 00000049 E2F2                            loop forIndex
+    50                                          endFor:
+    51                                          
+    52 0000004B 52                              push dword EDX
+    53 0000004C 68[15000000]                    push dword format
+    54 00000051 FF15[00000000]                  call [printf]
+    55 00000057 83C408                          add ESP, 4*2
+    56                                          
+    57 0000005A 53                              push dword EBX
+    58 0000005B 68[27000000]                    push dword format1
+    59 00000060 FF15[00000000]                  call [printf]
+    60 00000066 83C408                          add ESP, 4*2
+    61                                          
+    62                                          
+    63                                          
+    64                                          
+    65                                          ; exit(0)
+    66 00000069 6A00                            push dword 0      ; push on stack the parameter for exit
+    67 0000006B FF15[00000000]                  call [exit]       ; call exit to terminate the programme

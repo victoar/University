@@ -1,0 +1,39 @@
+     1                                  
+     2                                  bits 32 ;assembling for the 32 bits architecture
+     3                                  ; the start label will be the entry point in the program
+     4                                  global  start 
+     5                                  
+     6                                  extern  exit ; we inform the assembler that the exit symbol is foreign, i.e. it exists even if we won't be defining it
+     7                                  import  exit msvcrt.dll; exit is a function that ends the process, it is defined in msvcrt.dll
+     8                                          ; msvcrt.dll contains exit, printf and all the other important C-runtime functions
+     9                                  segment  data use32 class=data ; the data segment where the variables are declared 
+    10 00000000 313336323332                 s1 db '1', '3', '6', '2', '3', '2' ; declare the string of bytes
+    11 00000006 363338313235                 s2 db '6', '3', '8', '1', '2', '5' ; 
+    12                                  	 l equ $-s2 ; compute the length of the string in l
+    13 0000000C 00<rept>                	 d times l db 0 ; reserve l bytes for the destination string and initialize it
+    14                                  segment  code use32 class=code ; code segment
+    15                                  start: 
+    16                                  
+    17                                       ; Two byte strings S1 and S2 of the same length are given. Obtain the string D where each element is the difference of the corresponding elements from S1 and S2
+    18                                       ; The result should be D: -5, 0, -2, 1, 1, -3
+    19                                  
+    20                                  
+    21 00000000 B906000000                   mov ecx, l ; we put the length l in ECX in order to make the loop
+    22 00000005 BE00000000              	 mov esi, 0     
+    23 0000000A E317                    	 jecxz endFor      
+    24                                  	 forIndex
+    24          ******************       warning: label alone on a line without a colon might be in error [-w+orphan-labels]
+    25 0000000C 8A86[00000000]          		mov al, [s1+esi]
+    26 00000012 8A9E[06000000]          		mov bl, [s2+esi] 
+    27 00000018 28D8                    		sub al, bl             
+    28 0000001A 8886[0C000000]          		mov [d+esi], al    
+    29 00000020 46                      		inc esi
+    30 00000021 E2E9                    	 loop forIndex
+    31                                  	 endFor;end of the program
+    31          ******************       warning: label alone on a line without a colon might be in error [-w+orphan-labels]
+    32 00000023 A1[0C000000]                 mov eax, dword [d];
+    33 00000028 8B15[10000000]               mov edx, dword [d+4];
+    34                                      
+    35                                  
+    36 0000002E 6A00                         push dword 0 ;saves on stack the parameter of the function exit
+    37 00000030 FF15[00000000]               call [exit] ;function exit is called in order to end the execution ofthe program	

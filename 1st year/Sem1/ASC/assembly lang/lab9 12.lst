@@ -1,0 +1,91 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit, printf              ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  import printf msvcrt.dll
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  segment data use32 class=data
+    13                                      ; ...
+    14                                  
+    15 00000000 63617361                    a db "casa"
+    16                                      len equ $-a
+    17 00000004 74757265                    b db "ture"
+    18 00000008 25732000                    format db "%s ", 0
+    19 0000000C 546865206669727374-         format1 db "The first string is: ", 0
+    19 00000015 20737472696E672069-
+    19 0000001E 733A2000           
+    20 00000022 546865207365636F6E-         format2 db "The second string is: ", 0
+    20 0000002B 6420737472696E6720-
+    20 00000034 69733A2000         
+    21 00000039 00<rept>                    c times len*2 db 0
+    22 00000041 00<rept>                    d times len*2 db 0
+    23                                      ; in the end it should be ctausrae and tcuarsea
+    24                                      
+    25                                      
+    26                                  ; our code starts here
+    27                                  segment code use32 class=code
+    28                                      start:
+    29                                          ; ...
+    30                                      
+    31 00000000 BB00000000                  mov ebx, 0
+    32 00000005 BA00000000                  mov edx, 0
+    33 0000000A B904000000                  mov ecx, len
+    34 0000000F BF00000000                  mov edi, 0
+    35 00000014 E31E                        jecxz endFor1
+    36                                      forIndex1
+    36          ******************       warning: label alone on a line without a colon might be in error [-w+orphan-labels]
+    37 00000016 8A83[00000000]                  mov al, [a+ebx]
+    38 0000001C 8887[39000000]                  mov [c+edi], al
+    39 00000022 47                              inc edi
+    40 00000023 8A82[04000000]                  mov al, [b+edx]
+    41 00000029 8887[39000000]                  mov [c+edi], al
+    42 0000002F 47                              inc edi
+    43 00000030 43                              inc ebx
+    44 00000031 42                              inc edx
+    45 00000032 E2E2                        loop forIndex1
+    46                                      endFor1:
+    47                                      
+    48 00000034 68[0C000000]                push dword format1
+    49 00000039 FF15[00000000]              call [printf]
+    50 0000003F 83C404                      add esp, 4
+    51                                      
+    52 00000042 68[39000000]                push dword c
+    53 00000047 68[08000000]                push dword format
+    54 0000004C FF15[00000000]              call [printf]
+    55 00000052 83C408                      add ESP, 4*2
+    56                                      
+    57 00000055 BB00000000                  mov ebx, 0
+    58 0000005A BA00000000                  mov edx, 0
+    59 0000005F B904000000                  mov ecx, len
+    60 00000064 BF00000000                  mov edi, 0
+    61 00000069 E31E                        jecxz endFor2
+    62                                      forIndex2
+    62          ******************       warning: label alone on a line without a colon might be in error [-w+orphan-labels]
+    63 0000006B 8A82[04000000]                  mov al, [b+edx]
+    64 00000071 8887[41000000]                  mov [d+edi], al
+    65 00000077 47                              inc edi
+    66 00000078 8A83[00000000]                  mov al, [a+ebx]
+    67 0000007E 8887[41000000]                  mov [d+edi], al
+    68 00000084 47                              inc edi
+    69 00000085 43                              inc ebx
+    70 00000086 42                              inc edx
+    71 00000087 E2E2                        loop forIndex2
+    72                                      endFor2:
+    73                                      
+    74 00000089 68[22000000]                push dword format2
+    75 0000008E FF15[00000000]              call [printf]
+    76 00000094 83C404                      add esp, 4
+    77                                      
+    78 00000097 68[41000000]                push dword d
+    79 0000009C 68[08000000]                push dword format
+    80 000000A1 FF15[00000000]              call [printf]
+    81 000000A7 83C408                      add ESP, 4*2
+    82                                      
+    83                                          ; exit(0)
+    84 000000AA 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    85 000000AC FF15[00000000]                  call    [exit]       ; call exit to terminate the program

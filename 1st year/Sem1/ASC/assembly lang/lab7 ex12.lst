@@ -1,0 +1,40 @@
+     1                                  ; The code below will print the message „Ana has 17 apples”
+     2                                  bits 32
+     3                                  global start        
+     4                                  
+     5                                  ; declare extern functions used by the program
+     6                                  extern exit, printf         ; add printf as extern function            
+     7                                  import exit msvcrt.dll    
+     8                                  import printf msvcrt.dll    ; tell the assembler that function printf can be found in library msvcrt.dll
+     9                                  import scanf msvcrt.dll
+    10                                                            
+    11                                  segment data use32 class=data
+    12                                  ; char arrays are of type byte
+    13                                  
+    14 00000000 FBFFFFFF                        n dd -5
+    15 00000004 613D20256420286261-             format1 db "a= %d (base 10)", 0
+    15 0000000D 73652031302900     
+    16 00000014 2C20613D2025782028-             format2 db ", a= %x (base 16)", 0  ; %d will be replaced with a number
+    16 0000001D 626173652031362900 
+    17                                  
+    18                                  				; char strings for C functions must terminate with 0
+    19                                  segment  code use32 class=code
+    20                                      start:
+    21                                          
+    22                                          
+    23 00000000 A1[00000000]                    mov EAX, [n]
+    24 00000005 50                              push dword EAX 
+    25 00000006 68[04000000]                    push dword format1
+    26 0000000B FF15[00000000]                  call [printf]
+    27 00000011 83C408                          add ESP, 4*2
+    28                                          
+    29 00000014 A1[00000000]                    mov EAX, [n]
+    30 00000019 50                              push dword EAX
+    31 0000001A 68[14000000]                    push dword format2
+    32 0000001F FF15[00000000]                  call [printf]
+    33 00000025 83C408                          add ESP, 4*2
+    34                                          
+    35                                          ; exit(0)
+    36 00000028 6A00                            push dword 0      ; push on stack the parameter for exit
+    37 0000002A FF15[00000000]                  call [exit]       ; call exit to terminate the programme
+    38                                          

@@ -1,0 +1,7 @@
+(defun eliminaAtom3 (l)
+  (cond
+   ((and (numberp l) (= 0 (mod l 3))) nil)
+   ((atom l) (list l))
+   ((listp l) (list (mapcan (lambda(arg) (eliminaAtom3 arg)) l)))
+   )
+)

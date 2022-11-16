@@ -1,0 +1,106 @@
+     1                                  ;    A file name is given (defined in the data segment). Create a file with the given name,
+     2                                  ;  then read numbers from the keyboard and write those numbers in the file,
+     3                                  ;  until the value '0' is read from the keyboard.
+     4                                  
+     5                                  
+     6                                  bits 32
+     7                                  
+     8                                  global start
+     9                                  
+    10                                  ; declare external functions needed by our program
+    11                                  extern exit, fopen, fprintf, fclose, scanf, printf
+    12                                  import exit msvcrt.dll
+    13                                  import fopen msvcrt.dll
+    14                                  import fprintf msvcrt.dll
+    15                                  import fclose msvcrt.dll
+    16                                  import scanf msvcrt.dll
+    17                                  import printf msvcrt.dll
+    18                                  
+    19                                  ; our data is declared here (the variables needed by our program)
+    20                                  segment data use32 class=data
+    21 00000000 6E756D626572732E74-         file_name db "numbers.txt", 0   ; filename to be created
+    21 00000009 787400             
+    22 0000000C 7700                        access_mode db "w", 0       ; file access mode:
+    23                                                                  ; w - creates an empty file for writing
+    24 0000000E FFFFFFFF                    file_descriptor dd -1       ; variable to hold the file descriptor
+    25 00000012 2564000000000000            format dd "%d", 0  ; text to be write to file
+    26 0000001A 2564200000000000            wformat dd "%d ", 0
+    27 00000022 596F7572206E756D62-         titleformat dd "Your numbers are: ", 0
+    27 0000002B 657273206172653A20-
+    27 00000034 000000000000       
+    28 0000003A 4769766520736F6D65-         msg dd "Give some numbers: "
+    28 00000043 206E756D626572733A-
+    28 0000004C 2000               
+    29 0000004E 00000000                    nr dd 0
+    30                                  
+    31                                  ; our code starts here
+    32                                  segment code use32 class=code
+    33                                      start:
+    34                                          ; call fopen() to create the file
+    35                                          ; fopen() will return a file descriptor in the EAX or 0 in case of error
+    36                                          ; eax = fopen(file_name, access_mode)
+    37 00000000 68[0C000000]                    push dword access_mode     
+    38 00000005 68[00000000]                    push dword file_name
+    39 0000000A FF15[00000000]                  call [fopen]
+    40 00000010 83C408                          add esp, 4*2                ; clean-up the stack
+    41                                  
+    42 00000013 A3[0E000000]                    mov [file_descriptor], eax  ; store the file descriptor returned by fopen
+    43                                          
+    44                                          ; check if fopen() has successfully created the file (EAX != 0)
+    45 00000018 83F800                          cmp eax, 0
+    46 0000001B 7476                            je final
+    47                                          
+    48                                          ; print a nice message
+    49 0000001D 68[3A000000]                    push dword msg
+    50 00000022 FF15[00000000]                  call [printf]
+    51 00000028 83C404                          add ESP, 4*1
+    52                                  
+    53 0000002B 68[22000000]                    push dword titleformat
+    54 00000030 FF35[0E000000]                  push dword [file_descriptor]
+    55 00000036 FF15[00000000]                  call [fprintf]
+    56 0000003C 83C408                          add esp, 4*2
+    57 0000003F B901000000                      mov ecx, 1
+    58 00000044 BB00000000                      mov ebx, 0 ; I put in EBX 0, so I can compare EBX with the register in which the number from the keyboard will be
+    59 00000049 E339                            jecxz endFor
+    60                                          forIndex
+    60          ******************       warning: label alone on a line without a colon might be in error [-w+orphan-labels]
+    61 0000004B 68[4E000000]                        push dword nr
+    62 00000050 68[12000000]                        push dword format
+    63 00000055 FF15[00000000]                      call [scanf]
+    64 0000005B 83C408                              add ESP, 4*2
+    65 0000005E A1[4E000000]                        mov eax, [nr]
+    66 00000063 39D8                                cmp eax, ebx
+    67 00000065 741D                                je equal
+    68                                              ; write the text to file using fprintf()
+    69                                              ; fprintf(file_descriptor, text)
+    70 00000067 FF35[4E000000]                      push dword [nr]
+    71 0000006D 68[1A000000]                        push dword wformat
+    72 00000072 FF35[0E000000]                      push dword [file_descriptor]
+    73 00000078 FF15[00000000]                      call [fprintf]
+    74 0000007E 83C40C                              add esp, 4*3
+    75 00000081 41                                  inc ecx
+    76 00000082 E2C7                            loop forIndex
+    77                                          endFor:
+    78                                  
+    79                                        equal:
+    80                                          ; call fclose() to close the file
+    81                                          ; fclose(file_descriptor)
+    82 00000084 FF35[0E000000]                  push dword [file_descriptor]
+    83 0000008A FF15[00000000]                  call [fclose]
+    84 00000090 83C404                          add esp, 4
+    85                                  
+    86                                        final:
+    87                                  
+    88                                          ; exit(0)
+    89 00000093 6A00                            push dword 0      
+    90 00000095 FF15[00000000]                  call [exit]
+    91                                          
+    92                                          
+    93                                          
+    94                                          
+    95                                          
+    96                                          
+    97                                          
+    98                                          
+    99                                          
+   100                                          

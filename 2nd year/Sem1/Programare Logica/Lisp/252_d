@@ -1,0 +1,7 @@
+(defun succesor (l)
+  (cond
+   ((and (numberp l) (= (mod l 2) 0)) (+ l 1))
+   ((atom l) l)
+   (t (mapcar (lambda (l1) (succesor l1)) l))
+   )
+)

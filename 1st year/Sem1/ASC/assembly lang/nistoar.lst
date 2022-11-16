@@ -1,0 +1,164 @@
+     1                                  bits 32 
+     2                                  
+     3                                  global start        
+     4                                  
+     5                                  extern exit, scanf, fopen, fclose, fprintf  
+     6                                  import exit msvcrt.dll   
+     7                                  import fopen msvcrt.dll   
+     8                                  import fclose msvcrt.dll   
+     9                                  import scanf msvcrt.dll   
+    10                                  import fprintf msvcrt.dll
+    11                                   
+    12                                  ; se citeste de la tastatura un numar si un sir de caractere si apoi se creeaza un fisier cu numele "(sir)(numar).txt"
+    13                                  
+    14                                                           
+    15                                  segment data use32 class=data
+    16 00000000 00000000                    a dd 0
+    17 00000004 256400                      decimal_format db "%d", 0
+    18 00000007 00<rept>                    buffer times 50 db 0
+    19 00000039 257300                      string_format db "%s", 0
+    20 0000003C 7700                        access_mode db "w", 0
+    21 0000003E FFFFFFFF                    file_descriptor dd -1
+    22 00000042 2E74787400                  extensie db ".txt", 0
+    23 00000047 256300                      char_format db "%c", 0
+    24 0000004A 0A000000                    ten dd 10
+    25 0000004E 02000000                    two dd 2
+    26 00000052 FFFFFFFF                    minus_one dd -1
+    27 00000056 00<rept>                    digits times 50 db 0
+    28 00000088 00000000                    a1 dd 0
+    29 0000008C 00000000                    parity dd 0
+    30                                      
+    31                                  segment code use32 class=code
+    32                                      start:
+    33                                      
+    34                                      ; scanf("%s", &buffer)
+    35 00000000 68[07000000]                push dword buffer
+    36 00000005 68[39000000]                push dword string_format
+    37 0000000A FF15[00000000]              call [scanf]
+    38 00000010 83C408                      add ESP, 4*2
+    39                                      
+    40                                      ; scanf("%d", &a)
+    41 00000013 68[00000000]                push dword a
+    42 00000018 68[04000000]                push dword decimal_format
+    43 0000001D FF15[00000000]              call [scanf]
+    44 00000023 83C408                      add ESP, 4*2
+    45                                      
+    46                                      ; first things first, we compute the name of the file
+    47 00000026 FC                          cld 
+    48 00000027 BE[07000000]                mov ESI, buffer
+    49                                      
+    50                                      my_loop:
+    51 0000002C AC                              lodsb
+    52                                          
+    53 0000002D 3C00                            cmp AL, 0
+    54 0000002F 7402                            je exit_loop
+    55 00000031 EBF9                        jmp my_loop
+    56                                      
+    57                                      exit_loop:
+    58 00000033 4E                          dec ESI
+    59                                      
+    60 00000034 89F7                        mov EDI, ESI
+    61 00000036 BE[42000000]                mov ESI, extensie
+    62                                      
+    63                                      loop_2:
+    64 0000003B AC                              lodsb 
+    65 0000003C AA                              stosb
+    66 0000003D 3C00                            cmp al, 0
+    67 0000003F 7402                            je stop_loop
+    68 00000041 EBF8                        jmp loop_2
+    69                                      
+    70                                      stop_loop:
+    71                                      
+    72                                      ; fopen(&filename, &access_mode)
+    73 00000043 68[3C000000]                push dword access_mode
+    74 00000048 68[07000000]                push dword buffer
+    75 0000004D FF15[00000000]              call [fopen]
+    76 00000053 83C408                      add ESP, 4*2
+    77                                      
+    78 00000056 83F800                      cmp EAX, 0
+    79 00000059 0F84AE000000                je errorx
+    80 0000005F A3[3E000000]                mov dword[file_descriptor], EAX
+    81                                      
+    82                                      ; we check to see if there is a negative number
+    83                                      
+    84 00000064 A1[00000000]                mov eax, [a]
+    85 00000069 83F800                      cmp eax, 0
+    86 0000006C 99                          cdq
+    87 0000006D 7F06                        jg not_minus
+    88 0000006F F72D[52000000]                  imul dword [minus_one]
+    89                                      not_minus:
+    90 00000075 A3[00000000]                mov [a], eax
+    91                                      
+    92                                      ; we count the length of the number in ecx
+    93                                      
+    94 0000007A B900000000                  mov ecx, 0
+    95                                      
+    96                                      loop1:
+    97 0000007F 83F800                          cmp eax, 0
+    98 00000082 740A                            je stop_loop2
+    99 00000084 99                              cdq
+   100 00000085 F735[4A000000]                  div dword [ten]
+   101 0000008B 41                              inc ecx
+   102 0000008C EBF1                        jmp loop1
+   103                                      
+   104                                      stop_loop2:
+   105                                      
+   106                                      
+   107                                      ; in this part we will check every postion of the number
+   108                                      ; if the position is even, we ll add the number in digits variable
+   109                                      
+   110 0000008E BB00000000                  mov ebx, 0
+   111 00000093 A1[00000000]                mov eax, dword [a]
+   112 00000098 A3[88000000]                mov dword [a1], eax    
+   113                                          
+   114                                      loop2:
+   115 0000009D 83F900                          cmp ecx, 0
+   116 000000A0 7433                            je stop_loop_2
+   117 000000A2 89C8                            mov eax, ecx
+   118 000000A4 99                              cdq
+   119 000000A5 F735[4E000000]                  div dword [two]
+   120 000000AB 8915[8C000000]                  mov [parity], edx
+   121                                          ;jne no_even_pos
+   122 000000B1 A1[88000000]                    mov eax, [a1]
+   123 000000B6 99                              cdq
+   124 000000B7 F735[4A000000]                  div dword [ten]
+   125 000000BD A3[88000000]                    mov [a1], eax
+   126 000000C2 833D[8C000000]00                cmp dword [parity], 0
+   127 000000C9 7507                            jne no_even_pos
+   128 000000CB 8893[56000000]                      mov [digits+ebx], dl
+   129 000000D1 43                                  inc ebx        
+   130                                          no_even_pos:
+   131 000000D2 49                              dec ecx
+   132 000000D3 EBC8                        jmp loop2
+   133                                      stop_loop_2:
+   134                                      
+   135                                      ; im this part we will print step by step the numbers from digits variable
+   136 000000D5 4B                          dec ebx
+   137                                      print_loop:
+   138 000000D6 B800000000                      mov eax, 0
+   139 000000DB 8A83[56000000]                  mov al, [digits+ebx]
+   140                                          ;cmp ebx, 0
+   141                                          ;je print_finished
+   142 000000E1 50                              push dword eax
+   143 000000E2 68[04000000]                    push dword decimal_format
+   144 000000E7 FF35[3E000000]                  push dword [file_descriptor]
+   145 000000ED FF15[00000000]                  call [fprintf]
+   146 000000F3 83C40C                          add esp, 4*3
+   147 000000F6 83FB00                          cmp ebx, 0
+   148 000000F9 7403                            je print_finished
+   149 000000FB 4B                              dec ebx
+   150 000000FC EBD8                        jmp print_loop
+   151                                      
+   152                                      print_finished:
+   153                                      
+   154                                      
+   155                                      ; fclose(file_descriptor)
+   156 000000FE FF35[3E000000]              push dword [file_descriptor]
+   157 00000104 FF15[00000000]              call [fclose]
+   158 0000010A 83C404                      add ESP, 4*1
+   159                                      
+   160                                      errorx:
+   161                                      
+   162                                         
+   163 0000010D 6A00                            push    dword 0   
+   164 0000010F FF15[00000000]                  call    [exit]   

@@ -1,0 +1,39 @@
+     1                                  ;Given the words A and B, compute the word C as follows:
+     2                                  ;- the bits 0-2 of C are the same as the bits 10-12 of B
+     3                                  ;- the bits 3-6 of C have the value 1
+     4                                  ;- the bits 7-10 of C are the same as the bits 1-4 of A
+     5                                  ;- the bits 11-12 have the value 0
+     6                                  ;- the bits 13-15 of C are the invert of the bits 9-11 of B
+     7                                  
+     8                                  ; We will obtain the word C by successive "isolation" of bits sequences. The isolation
+     9                                  ; of the bits 10-12 of B is done by obtaining the unchanged values of these bits,  
+    10                                  ; and initialising all other bits to 0. The isolation operation can be performed
+    11                                  ; using the operator AND between the word B and the mask
+    12                                  ; 0001110000000000. Once isolated, the sequence of bits is put on the right  position by using a rotation operation. 
+    13                                  ; The final word is obtained by applying the operator OR between all intermediate results obtained by using isolations and rotations.
+    14                                  
+    15                                  ; Observation: bits are numbered from right to left
+    16                                  
+    17                                  bits 32 ;assembling for the 32 bits architecture
+    18                                  ; the start label will be the entry point in the program
+    19                                  global  start 
+    20                                  
+    21                                  extern  exit ; we inform the assembler that the exit symbol is foreign, i.e. it exists even if we won't be defining it
+    22                                  import  exit msvcrt.dll; exit is a function that ends the process, it is defined in msvcrt.dll
+    23                                          ; msvcrt.dll contains exit, printf and all the other important C-runtime functions
+    24                                  segment  data use32 class=data ; the data segment where the variables are declared 
+    25                                      
+    26 00000000 12                          d db 12h;
+    27 00000001 3322                        e dw 2233h;
+    28 00000003 44332211                    f dd 11223344h
+    29                                  segment  code use32 class=code ; code segment
+    30                                  start: 
+    31                                  
+    32 00000000 A0[00000000]                 mov al, [d] ;
+    33 00000005 A0[01000000]                 mov al, [d+1];
+    34 0000000A A0[02000000]                 mov al, [d+2];
+    35 0000000F A0[03000000]                 mov al, [d+3]
+    36                                  
+    37                                  
+    38 00000014 6A00                         push dword 0 ;saves on stack the parameter of the function exit
+    39 00000016 FF15[00000000]               call [exit] ;function exit is called in order to end the execution ofthe program	

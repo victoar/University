@@ -1,0 +1,6 @@
+(defun cmmdc (x y)
+  (cond
+   ( (= y 0) x)
+   ( t (cmmdc y (mod x y)))
+   )
+)

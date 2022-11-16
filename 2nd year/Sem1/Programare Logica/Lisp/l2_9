@@ -1,0 +1,84 @@
+;As an example, the tree
+;         A                      A
+;       / \                    /  \
+;      B  C                   B    C
+;        / \                / \   / \
+;       D  E               D  E  F  G
+; is represented as follows:
+; (A 2 B 0 C 2 D 0 E 0) (1.1)
+; (A (B) (C (D) (E))) (2.1)
+; OR
+; (A 2 B 2 D 0 E 0 C 2 F 0 G 0) (1.2)
+; (A (B (D) (E)) (C (F) (G))) (2.2)
+
+; 9. Convert a tree of type (1) to type (2).
+
+; convert (l1...ln) =   - left = get_subtrees(l3...ln)[0]
+;                         right = get_subtrees(l3...ln)[1]
+;                         l1 U convert(left) U convert(right), l2 == 2
+;                       - l1 U convert(l3...ln), l2 == 1
+;                       - l1, l2 == 0
+(defun convert (tree)
+    (cond
+        ( (not (numberp (car (cdr tree))))
+          (print '"Each node must be followed by an integer representing the number of children.")
+          NIL
+        )
+        ( (= (car (cdr tree)) 2)
+          (list
+            (car tree)
+            (convert (car (get_subtrees (cdr (cdr tree)))))
+            (convert (car (cdr (get_subtrees (cdr (cdr tree))))))
+          )
+        )
+        ( (= (car (cdr tree)) 1)
+          (list (car tree) ( convert (cdr (cdr tree)) ))
+        )
+        ( (= (car (cdr tree)) 0)
+          (list (car tree))
+        )
+        ( t
+          (print '"The number of children in a binary tree is either 2, 1 or 0!")
+          NIL
+        )
+    )
+)
+
+; get_subtrees(l1l2...ln) = - l1 U get_subtrees_rec(l3...ln, l2)
+(defun get_subtrees (tree)
+    (defvar both_subtrees)
+    (setq both_subtrees ( get_subtrees_rec (cdr (cdr tree)) (car (cdr tree)) ))
+    (list
+        (append
+          ( list (car tree) (car (cdr tree)) )
+          ( car both_subtrees )
+        ) ; left subtree
+        (car (cdr both_subtrees)) ; right subtree
+    )
+)
+
+; get_subtrees_rec(l1l2..ln, no_of_kids) =  - l1 U get_subtrees_rec(l3...ln, no_of_kids + l2 - 1)
+;                                           - l1l2...ln, no_of_kids = 0
+(defun get_subtrees_rec (tree no_of_kids)
+    (cond
+      ( (= no_of_kids 0)
+        (list NIL tree)
+      )
+      ( t
+        (defvar subtrees)
+        (setq subtrees
+          (get_subtrees_rec
+            (cdr (cdr tree))
+            (- ( + no_of_kids (car (cdr tree)) ) 1)
+          )
+        )
+        (list
+            (append
+              ( list (car tree) (car (cdr tree)) )
+              ( car subtrees )
+            ) ; left subtree
+            (car (cdr subtrees)) ; right subtree
+        )
+      )
+    )
+)

@@ -1,0 +1,48 @@
+(defun parseLeft(tree nrVertices nrEdges)
+(cond ((null tree) nil)
+      ((eq nrVertices (+ nrEdges 1)) nil)
+      ( t ( cons (car tree) ( cons (cadr tree)  (parseLeft (cddr tree) ( + nrVertices 1) (+ nrEdges (cadr tree)) ) ) ) )
+)
+)
+
+( defun left(tree)
+ ( 
+   parseLeft (cddr tree) 0 0 
+ )
+)
+
+(defun parseRight(tree nrVertices nrEdges)
+(cond ((null tree) nil)
+      ((eq nrVertices (+ nrEdges 1)) tree)
+      ( t (parseRight (cddr tree) ( + nrVertices 1) (+ nrEdges (cadr tree)) )  ) 
+)
+)
+
+( defun right(tree)
+(
+  parseRight (cddr tree) 0 0
+)
+)
+
+( defun transformTo2(tree)
+( 
+ cond ((null tree) nil )
+      ((null (cddr tree)) (list (car tree)) )
+      (t ( cons (car tree)( cons (transformTo2 (left tree)) (list (transformTo2 (right tree)))  ) ) ) 
+)
+)
+
+
+( defun removeNil(list)
+ ( cond ((null list) nil)
+        ((eq (car list) nil) ( removeNil (cdr list)))
+        ((listp (car list)) ( cons (removeNil (car list)) (removeNil (cdr list)) ))
+        (t ( cons ( car list) (removeNil (cdr list) )))
+ )
+)
+
+( defun transformFrom1To2(tree)
+(
+ removeNil (transformTo2 tree)
+)
+)

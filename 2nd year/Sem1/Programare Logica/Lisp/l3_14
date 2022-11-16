@@ -1,0 +1,6 @@
+(defun atom_count ( l )
+  (cond
+   ((null l) 0)
+   ((atom l) 1)
+   (t( apply #'+( mapcar #'atom_count l )))
+)) 

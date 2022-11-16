@@ -1,0 +1,72 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                   
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                   
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit, scanf, printf               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  import scanf msvcrt.dll
+    11                                  import printf msvcrt.dll
+    12                                   
+    13                                  ; our data is declared here (the variables needed by our program)
+    14                                  segment data use32 class=data
+    15                                      ; ...
+    16                                   
+    17 00000000 2575                            format db "%u"
+    18 00000002 434D4D444320697320-             format1 db "CMMDC is %u"
+    18 0000000B 2575               
+    19 0000000D 00                              a db 0
+    20 0000000E 00                              b db 0
+    21                                   
+    22                                  ; our code starts here
+    23                                  segment code use32 class=code
+    24                                      start:
+    25                                          ; ...
+    26                                   
+    27                                          ; read the first number
+    28 00000000 68[0D000000]                    push dword a
+    29 00000005 68[00000000]                    push dword format
+    30 0000000A FF15[00000000]                  call [scanf]
+    31 00000010 83C408                          add ESP, 4*2
+    32                                          
+    33 00000013 8B1D[0D000000]                  mov ebx, [a]
+    34                                   
+    35                                          ; read the second number
+    36 00000019 68[0E000000]                    push dword b
+    37 0000001E 68[00000000]                    push dword format
+    38 00000023 FF15[00000000]                  call [scanf]
+    39 00000029 83C408                          add ESP, 4*2
+    40                                   
+    41 0000002C 8B15[0E000000]                  mov edx, [b]
+    42                                   
+    43 00000032 B901000000                      mov ecx, 1; we will make an infinite loop. It will stop only when the 2 numbers are the same
+    44                                          
+    45 00000037 E313                            jecxz endFor
+    46                                          forIndex:
+    47 00000039 39D3                                cmp ebx,edx
+    48 0000003B 740F                                    je outside; jumps outside if the loop instruction when the 2 numbers are the same (CMMDC is found)
+    49 0000003D 39D3                                cmp ebx,edx
+    50 0000003F 7704                                    ja next; if ebx is bigger than edx, it jumps to second operation, else it substracts ebx from edx
+    51 00000041 29DA                                        sub edx, ebx
+    52 00000043 7704                                        ja next1
+    53                                                  next:
+    54 00000045 7202                                    jb next1; if edx is bigger than ebx, it jumps to the end, else it substracts edx from ebx
+    55 00000047 29D3                                        sub ebx, edx
+    56                                                  next1:
+    57 00000049 41                                  inc ecx
+    58 0000004A E2ED                            loop forIndex
+    59                                          endFor:
+    60                                          outside:
+    61                                          
+    62                                          ; printing the final result
+    63 0000004C 53                              push dword ebx; ebx and edx are the same, so we can take any of them 
+    64 0000004D 68[02000000]                    push dword format1
+    65 00000052 FF15[00000000]                  call [printf]
+    66 00000058 83C408                          add esp, 4*2
+    67                                          
+    68                                          ; exit(0)
+    69 0000005B 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    70 0000005D FF15[00000000]                  call    [exit]       ; call exit to terminate the program
+    71                                   

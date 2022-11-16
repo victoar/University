@@ -1,0 +1,153 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit, printf               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                  import printf msvcrt.dll                          ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  segment data use32 class=data
+    13                                      ; ...
+    14                                  
+    15 00000000 36AB451289674523EE-         sir1 dd 1245ab36h, 23456789h, 1212F1EEh
+    15 00000009 F11212             
+    16                                      len equ ($-sir1)/4
+    17 0000000C 00000000                    lung dd 0
+    18 00000010 00<rept>                    sir2 times len db 0
+    19 00000013 00<rept>                    sir3 times 100 db 0
+    20 00000077 00<rept>                    sir4 times len db 0
+    21 0000007A 256400                      format db '%d', 0
+    22 0000007D 256300                      format2 db '%c', 0
+    23 00000080 25732000                    format3 db '%s ', 0
+    24                                      
+    25                                  ; our code starts here
+    26                                  segment code use32 class=code
+    27                                      start:
+    28                                          ; ...
+    29                                          
+    30                                          
+    31 00000000 BE[00000000]                    mov esi, sir1
+    32 00000005 BF[10000000]                    mov edi, sir2
+    33 0000000A B903000000                      mov ecx, len
+    34 0000000F FC                              cld
+    35 00000010 E314                            jecxz loop1
+    36                                          forIndex:
+    37 00000012 66AD                                lodsw
+    38 00000014 80FC00                              cmp AH, byte 0
+    39 00000017 7F09                                jg not_good
+    40 00000019 88E0                                    mov al, ah
+    41 0000001B AA                                      stosb
+    42 0000001C FF05[0C000000]                          inc dword [lung]
+    43                                              not_good:
+    44 00000022 66AD                                lodsw
+    45 00000024 E2EC                            loop forIndex
+    46                                          loop1:
+    47                                          
+    48 00000026 BE[10000000]                    mov esi, sir2
+    49 0000002B FC                              cld
+    50                                          ;mov edi, sir4
+    51                                          loop4:
+    52 0000002C AC                                  lodsb
+    53 0000002D 3C00                                cmp al, byte 0
+    54 0000002F 744F                                je outside1
+    55 00000031 B908000000                          mov ecx, 8
+    56                                                  print_bits:
+    57                                                  
+    58 00000036 D0E0                                    shl al, 1
+    59 00000038 50                                      push eax
+    60 00000039 51                                      push ecx
+    61 0000003A 7316                                    jnc zero
+    62                                                  
+    63 0000003C BB01000000                              mov ebx, 1
+    64 00000041 53                                      push ebx
+    65 00000042 68[7A000000]                            push dword format
+    66 00000047 FF15[00000000]                          call [printf]
+    67 0000004D 83C408                                  add esp, 4*2
+    68 00000050 EB14                                    jmp next
+    69                                                  
+    70                                                  zero:
+    71                                                  
+    72 00000052 BB00000000                              mov ebx, 0
+    73 00000057 53                                      push ebx
+    74 00000058 68[7A000000]                            push dword format
+    75 0000005D FF15[00000000]                          call [printf]
+    76 00000063 83C408                                  add esp, 4*2
+    77                                                  
+    78                                                  next:
+    79                                                  
+    80 00000066 59                                      pop ecx
+    81 00000067 58                                      pop eax
+    82                                                  
+    83 00000068 E2CC                                    loop print_bits
+    84                                                  
+    85 0000006A BB20000000                              mov ebx, 32
+    86 0000006F 53                                      push ebx
+    87 00000070 68[7D000000]                            push dword format2
+    88 00000075 FF15[00000000]                          call [printf]
+    89 0000007B 83C408                                  add esp, 4*2
+    90                                                  
+    91 0000007E EBAC                            jmp loop4
+    92                                          outside1:
+    93                                          
+    94 00000080 BE[10000000]                    mov esi, sir2
+    95 00000085 BF[13000000]                    mov edi, sir3
+    96 0000008A B30A                            mov bl, 10
+    97 0000008C FC                              cld
+    98                                          loop3:
+    99 0000008D B02D                                mov al, '-'
+   100 0000008F AA                                  stosb
+   101 00000090 AC                                  lodsb
+   102 00000091 3C00                                cmp al, 0
+   103 00000093 742E                                je stop_loop
+   104 00000095 F6D8                                neg al
+   105 00000097 B900000000                          mov ecx, 0
+   106                                              loop5:
+   107 0000009C 3C00                                    cmp al, 0
+   108 0000009E 740D                                    je stop_loop5
+   109 000000A0 B400                                    mov ah, 0
+   110 000000A2 F6F3                                    div bl
+   111 000000A4 88A1[77000000]                          mov [sir4 + ecx], ah
+   112 000000AA 41                                      inc ecx
+   113 000000AB EBEF                                jmp loop5
+   114                                              stop_loop5:
+   115                                              invers:
+   116 000000AD 83F900                                  cmp ecx, dword 0
+   117 000000B0 740C                                    je stop_invers
+   118 000000B2 49                                      dec ecx
+   119 000000B3 8A81[77000000]                          mov al, [sir4 + ecx]
+   120 000000B9 0430                                    add al, 48
+   121 000000BB AA                                      stosb
+   122 000000BC EBEF                                jmp invers
+   123                                              stop_invers:
+   124 000000BE B020                                mov al, 32
+   125 000000C0 AA                                  stosb
+   126                                                    
+   127 000000C1 EBCA                            jmp loop3
+   128                                          stop_loop:
+   129 000000C3 4F                              dec edi
+   130 000000C4 B000                            mov al, 0
+   131 000000C6 AA                              stosb
+   132                                          
+   133 000000C7 BE[13000000]                    mov esi, sir3
+   134                                          printing:
+   135                                          
+   136 000000CC B800000000                          mov eax, 0
+   137 000000D1 AC                                  lodsb
+   138 000000D2 3C00                                cmp al, 0
+   139 000000D4 7411                                je stop_printing
+   140 000000D6 50                                      push eax
+   141 000000D7 68[7D000000]                            push dword format2
+   142 000000DC FF15[00000000]                          call [printf]
+   143 000000E2 83C408                                  add esp, 4*2
+   144 000000E5 EBE5                            jmp printing
+   145                                          
+   146                                          stop_printing:
+   147                                          
+   148                                          
+   149                                          
+   150                                          ; exit(0)
+   151 000000E7 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+   152 000000E9 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

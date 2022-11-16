@@ -1,0 +1,45 @@
+     1                                  ; Given the doubleword A, obtain the integer number n represented on the bits 14-17 of A. Then obtain the doubleword B by rotating A n positions to the ; left. Finally, obtain the byte C as follows:
+     2                                  ; the btis 0-5 of C are the same as the bits 1-6 of B
+     3                                  ; the bits 6-7 of C are the same as the bits 17-18 of B
+     4                                  
+     5                                  bits 32 ;assembling for the 32 bits architecture
+     6                                  ; the start label will be the entry point in the program
+     7                                  global  start 
+     8                                  
+     9                                  extern  exit ; we inform the assembler that the exit symbol is foreign, i.e. it exists even if we won't be defining it
+    10                                  import  exit msvcrt.dll; exit is a function that ends the process, it is defined in msvcrt.dll
+    11                                          ; msvcrt.dll contains exit, printf and all the other important C-runtime functions
+    12                                  segment  data use32 class=data ; the data segment where the variables are declared 
+    13 00000000 C1045777                     A dd 0111_0111_0101_0111_0000_0100_1100_0001b
+    14 00000004 <res 00000004>               B resd 1
+    15 00000008 0000                         c dw 0
+    16                                  segment  code use32 class=code ; code segment
+    17                                  start: 
+    18                                  
+    19                                       
+    20                                       ; Given the doubleword A, obtain the integer number n represented on the bits 14-17 of A. Then obtain the doubleword B by rotating A n positions to the left
+    21 00000000 B800C00300                   mov  EAX, 0000_0000_0000_0011_1100_0000_0000_0000b ; 
+    22 00000005 2305[00000000]               and EAX, [A]; get the bits from 14 to 17 and we put them in EAX
+    23 0000000B C1C80E                       ror EAX, 14; get the bits in which we are interested in AL
+    24 0000000E 8B1D[00000000]               mov EBX, [A]; 
+    25 00000014 88C1                         mov CL, AL;
+    26 00000016 D3C3                         rol EBX, CL;
+    27                                       
+    28                                       ; the btis 0-5 of C are the same as the bits 1-6 of B
+    29 00000018 89D8                         mov EAX, EBX;
+    30 0000001A 83E07E                       and EAX, 0000_0000_0000_0000_0000_0000_0111_1110b
+    31 0000001D B101                         mov CL, 1;
+    32 0000001F D3C8                         ror EAX, CL;
+    33 00000021 09C1                         or ECX, EAX;
+    34                                       
+    35                                       ; the bits 6-7 of C are the same as the bits 17-18 of B
+    36 00000023 89D8                        mov EAX, EBX;
+    37 00000025 2500000600                  and EAX, 0000_0000_0000_0110_0000_0000_0000_0000b
+    38 0000002A B10B                        mov CL, 11;
+    39 0000002C D3C8                        ror EAX, CL;
+    40 0000002E 09C1                        or ECX, EAX;
+    41                                       
+    42                                       
+    43                                  
+    44 00000030 6A00                         push dword 0 ;saves on stack the parameter of the function exit
+    45 00000032 FF15[00000000]               call [exit] ;function exit is called in order to end the execution ofthe program	

@@ -1,0 +1,14 @@
+(defun nivelPar (tree x curr)
+  (cond
+   ((and (and (atom tree) (= 0 (mod curr 2))) (= x tree)) 1)
+   ((atom tree) 0)
+   (t (apply #'+ (mapcar (lambda (arg) (nivelPar arg x (+ curr 1))) tree)))
+   )
+)
+
+(defun check (tree x curr)
+  (cond
+   ((< 1 (nivelPar tree x curr)) T)
+   ((= 0 (nivelPar tree x curr)) nil)
+   )
+)

@@ -1,0 +1,14 @@
+(defun nivelNodImpar (tree x curr)
+  (cond 
+   ((and (= 1 (mod curr 2)) (equal x tree)) 1)
+   ((atom tree) 0)
+   ((apply #'+ (mapcar (lambda(arg) (nivelNodImpar arg x (+ curr 1))) tree)))
+   )
+)
+
+(defun check (tree x)
+  (cond
+   ((< 0 (nivelNodImpar tree x -1)) t)
+   ((= 0 (nivelNodImpar tree x -1)) nil)
+   )
+)

@@ -1,0 +1,61 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit ,printf              ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                  import printf msvcrt.dll                        ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  segment data use32 class=data
+    13                                      ; ...
+    14                                      
+    15 00000000 534920736520496D70-         sir1 db 'SI se ImpiNg SI SAr RAZanD'
+    15 00000009 694E67205349205341-
+    15 00000012 722052415A616E44   
+    16                                      len1 equ $-sir1
+    17 0000001A 5072496E205A617041-         sir2 db 'PrIn ZapADA Fac mATAniI'
+    17 00000023 444120466163206D41-
+    17 0000002C 54416E6949         
+    18                                      len2 equ $-sir2
+    19 00000031 256400                      format db '%d', 0
+    20                                      
+    21                                  ; our code starts here
+    22                                  segment code use32 class=code
+    23                                      start:
+    24                                          ; ...
+    25                                      
+    26 00000000 BB00000000                      mov ebx, 0
+    27 00000005 BE19000000                      mov esi, len1-1
+    28 0000000A B91A000000                      mov ecx, len1
+    29                                          et_1:
+    30 0000000F 51                                  push ecx
+    31 00000010 8A86[00000000]                      mov al, [sir1+esi]
+    32 00000016 3C7A                                cmp al, 'z'
+    33 00000018 771A                                ja et_4
+    34 0000001A 3C61                                cmp al, 'a'
+    35 0000001C 7216                                jb et_4
+    36 0000001E BF00000000                          mov edi, 0
+    37 00000023 B917000000                          mov ecx, len2
+    38                                              et_2:
+    39 00000028 3A87[1A000000]                          cmp al, [sir2+edi]
+    40 0000002E 7501                                    jne et_3
+    41 00000030 43                                      inc ebx
+    42                                              et_3:
+    43 00000031 47                                      inc edi
+    44 00000032 E2F4                                loop et_2
+    45                                          et_4:
+    46 00000034 59                                  pop ecx
+    47 00000035 E2D8                           loop et_1
+    48                                         
+    49 00000037 53                             push ebx
+    50 00000038 68[31000000]                   push dword format
+    51 0000003D FF15[00000000]                 call [printf]
+    52 00000043 83C408                         add esp, 4*2
+    53                                      
+    54                                      
+    55                                          ; exit(0)
+    56 00000046 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    57 00000048 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

@@ -1,0 +1,61 @@
+     1                                  ; Write a program in the assembly language that computes the following arithmetic expression, considering the following data types for the variables:
+     2                                  ; a - byte, b - word
+     3                                  ; (b / a * 2 + 10) * b - b * 15;
+     4                                  ; ex. 1: a = 10; b = 40; Result: (40 / 10 * 2 + 10) * 40 - 40 * 15 = 18 * 40 - 1600 = 720 - 600 = 120
+     5                                  ; ex. 2: a = 100; b = 50; Result: (50 / 100 * 2 + 10) * 50 - 50 * 15 = 12 * 50 - 750 = 600 - 750 = - 150
+     6                                  bits 32 ;assembling for the 32 bits architecture
+     7                                  ; the start label will be the entry point in the program
+     8                                  global  start 
+     9                                  
+    10                                  extern  exit ; we inform the assembler that the exit symbol is foreign, i.e. it exists even if we won't be defining it
+    11                                  
+    12                                  import  exit msvcrt.dll; exit is a function that ends the process, it is defined in msvcrt.dll
+    13                                          ; msvcrt.dll contains exit, printf and all the other important C-runtime functions
+    14                                  segment  data use32 class=data ; the data segment where the variables are declared 
+    15                                  	
+    16 00000000 0B                          a db 11 ; a->Al, AH-= 8biti,1byte; BL, BH. CL.CH. DH,DL
+    17 00000001 28                          b db 40 ;AX = AH |AL -2bytes BX, CX, EAX (high part)
+    18 00000002 00                          c db 0;
+    19 00000003 01                          d db 1;
+    20 00000004 2AC3                        e dw 0C32Ah;
+    21                                      
+    22                                  segment  code use32 class=code ; code segment
+    23                                  start: 
+    24                                  
+    25 00000000 B303                        mov BL, 3
+    26 00000002 B002                        mov AL, 2;
+    27 00000004 8A1D[02000000]              mov BL, [c];
+    28 0000000A 021D[03000000]              add BL, [d];
+    29 00000010 8A0D[00000000]              mov CL, [a];
+    30 00000016 020D[01000000]              add CL, [b];
+    31 0000001C 2A0D[02000000]              sub CL, [c];
+    32 00000022 28D8                        sub AL, BL;
+    33 00000024 00C8                        add AL, CL;
+    34                                      
+    35                                  
+    36 00000026 66A1[01000000]          	mov  AX, [b] ;AX = b
+    37 0000002C F635[00000000]          	div  BYTE [a] ;AL = AX / a = b / a and AH = AX % a = b % a
+    38                                  	
+    39 00000032 B402                    	mov  AH, 2 ;AH = 2
+    40 00000034 F6E4                    	mul  AH ;AX = AL * AH = b / a * 2	
+    41                                  	
+    42 00000036 6683C00A                	add  AX, 10 ;AX = AX + b = b / a * 2 + 10
+    43                                  	
+    44 0000003A 66F725[01000000]        	mul  word [b] ;DX:AX = AX * b = (b / a * 2 + 10) * b
+    45                                  	
+    46 00000041 6652                    	push  DX ;the high part of the doubleword DX:AX is saved on the stack
+    47 00000043 6650                    	push  AX ;the low part of the doubleword DX:AX is saved on the stack
+    48 00000045 5B                      	pop  EBX ;EBX = DX:AX = (b / a * 2 + 10) * b
+    49                                  	
+    50 00000046 66A1[01000000]          	mov  AX, [b] ;AX = b
+    51 0000004C 66BA0F00                	mov  DX, 15 ;DX = 15
+    52 00000050 66F7E2                  	mul  DX ;DX:AX = b * 15
+    53                                  	
+    54 00000053 6652                    	push  DX ;the high part of the doubleword DX:AX is saved on the stack
+    55 00000055 6650                    	push  AX ;the low part of the doubleword DX:AX is saved on the stack
+    56 00000057 58                      	pop  EAX ;EAX = DX:AX = b * 15
+    57                                  	
+    58 00000058 29C3                    	sub  EBX, EAX ;EBX = EBX - EAX = (b / a * 2 + 10) * b - b * 15
+    59                                  	
+    60 0000005A 6A00                    	push   dword 0 ;saves on stack the parameter of the function exit
+    61 0000005C FF15[00000000]          	call   [exit] ; function exit is called in order to end the execution of the program

@@ -1,0 +1,7 @@
+(defun eliminaNod (l k curr)
+  (cond
+   ((and (atom l) (= curr k) nil))
+   ((and (atom l) (not(= curr k)) (list l)))
+   ((listp l) (list(mapcan (lambda (arg) (eliminaNod arg k (+ curr 1))) l)))
+  )
+)

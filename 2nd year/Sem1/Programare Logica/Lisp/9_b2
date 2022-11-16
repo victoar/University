@@ -1,0 +1,9 @@
+
+(defun replaceElem1 (l l1 e)
+  (cond
+   ((null l) nil)
+   ((listp(car l))  (cons(replaceElem l l1 e)(replaceElem (cdr l) l1 e)) )
+   ((equal(car l)e) (cons (car l1) (cons (replaceElem (cdr l1) l1 e) (replaceElem l l1 e))))
+   (t               (cons(car l)(replaceElem (cdr l) l1 e)))
+  )
+)

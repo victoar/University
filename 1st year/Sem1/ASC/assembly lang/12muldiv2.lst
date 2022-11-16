@@ -1,0 +1,39 @@
+     1                                  
+     2                                  bits 32 ;assembling for the 32 bits architecture
+     3                                  ; the start label will be the entry point in the program
+     4                                  global  start 
+     5                                  
+     6                                  extern  exit ; we inform the assembler that the exit symbol is foreign, i.e. it exists even if we won't be defining it
+     7                                  
+     8                                  import  exit msvcrt.dll; exit is a function that ends the process, it is defined in msvcrt.dll
+     9                                          ; msvcrt.dll contains exit, printf and all the other important C-runtime functions
+    10                                  segment  data use32 class=data ; the data segment where the variables are declared 
+    11                                  	
+    12 00000000 08                          a db 8;
+    13 00000001 04                          b db 4;
+    14 00000002 06                          c db 6;
+    15 00000003 0C                          d db 12;
+    16 00000004 0700                        e dw 7
+    17 00000006 0F00                        f dw 15
+    18 00000008 0D00                        g dw 13
+    19 0000000A 1000                        h dw 16
+    20                                      
+    21                                  segment  code use32 class=code ;
+    22                                  start: 
+    23                                  
+    24                                      ; (a*d+e)/[c+h/(c-b)]
+    25                                      
+    26 00000000 A0[00000000]                mov AL, [a];
+    27 00000005 F625[03000000]              mul byte [d];
+    28 0000000B 660305[04000000]            add AX, [e];
+    29 00000012 6689C3                      mov BX, AX;
+    30 00000015 8A0D[02000000]              mov CL, [c];
+    31 0000001B 2A0D[01000000]              sub CL, [b];
+    32 00000021 66A1[0A000000]              mov AX, [h];
+    33 00000027 F6F1                        div CL;
+    34 00000029 0205[02000000]              add AL, [c];
+    35 0000002F 88C1                        mov CL, AL;
+    36 00000031 6689D8                      mov AX, BX;
+    37 00000034 F6F1                        div CL;
+    38                                      
+    39                                      	

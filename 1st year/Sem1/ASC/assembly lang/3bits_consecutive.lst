@@ -1,0 +1,124 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit, printf, scanf               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                  import printf msvcrt.dll                          ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  import scanf msvcrt.dll
+    11                                  
+    12                                  ; our data is declared here (the variables needed by our program)
+    13                                  segment data use32 class=data
+    14                                      ; ...
+    15                                  
+    16 00000000 770000000000000000-         sir dq 1110111b, 1000000h, 0abcd0002e7fch, 5
+    16 00000009 00000100000000FCE7-
+    16 00000012 0200CDAB0000050000-
+    16 0000001B 0000000000         
+    17                                      len equ ($-sir)/8
+    18 00000020 00000000<rept>              rez times len dd 0
+    19 00000030 00000000                    counter dd 0
+    20 00000034 00000000                    ok dd 0
+    21 00000038 256300                      format_char db '%c', 0
+    22 0000003B 00<rept>                    prop times 30 db 0
+    23 00000059 255B5E0A5D00                format db "%[^", 0x0A, "]", 0
+    24                                      
+    25                                  ; our code starts here
+    26                                  segment code use32 class=code
+    27                                      start:
+    28                                          ; ...
+    29                                      
+    30 00000000 6878563412                      push 0x12345678
+    31 00000005 665B                            pop bx
+    32 00000007 6658                            pop ax
+    33                                          
+    34 00000009 BE[00000000]                    mov esi, sir
+    35 0000000E BF[20000000]                    mov edi, rez
+    36 00000013 B904000000                      mov ecx, len
+    37 00000018 FC                              cld
+    38                                          loop1:
+    39 00000019 AD                                  lodsd
+    40 0000001A 51                                  push ecx
+    41 0000001B 89C3                                mov ebx, eax
+    42 0000001D B920000000                          mov ecx, 32
+    43 00000022 BA00000000                          mov edx, 0 ; number of 3 consecutive 1
+    44                                              counter_bits:
+    45 00000027 D1E3                                    shl ebx, 1
+    46 00000029 7308                                    jnc is_zero
+    47 0000002B FF05[30000000]                              inc dword [counter]
+    48 00000031 EB14                                        jmp next
+    49                                                  is_zero:
+    50 00000033 833D[30000000]03                        cmp dword [counter], 3
+    51 0000003A 7201                                    jb not_good
+    52 0000003C 42                                          inc edx
+    53                                                  not_good:
+    54 0000003D C705[30000000]0000-                     mov dword [counter], 0
+    54 00000045 0000               
+    55                                                  next:
+    56                                                  
+    57 00000047 E2DE                                loop counter_bits
+    58                                              
+    59 00000049 833D[30000000]03                    cmp dword [counter], 3
+    60 00000050 7201                                jb not_good1
+    61 00000052 42                                      inc edx
+    62                                              not_good1:
+    63                                              
+    64 00000053 83FA02                              cmp edx, 2
+    65 00000056 7201                                jb not_two
+    66 00000058 AB                                      stosd
+    67                                              not_two:
+    68                                              
+    69 00000059 AD                                  lodsd
+    70 0000005A 59                                  pop ecx
+    71 0000005B E2BC                            loop loop1
+    72                                                  
+    73 0000005D BE[20000000]                    mov esi, rez
+    74 00000062 FC                              cld
+    75                                          printing:
+    76 00000063 AD                                  lodsd
+    77 00000064 83F800                              cmp eax, 0
+    78 00000067 7462                                je stop
+    79 00000069 B920000000                          mov ecx, 32
+    80 0000006E C705[34000000]0000-                 mov dword [ok], 0
+    80 00000076 0000               
+    81                                              bits_loop:
+    82 00000078 D1E0                                    shl eax, 1
+    83 0000007A 731E                                    jnc is_zero1
+    84 0000007C C705[34000000]0100-                         mov dword [ok], 1
+    84 00000084 0000               
+    85 00000086 51                                          push ecx
+    86 00000087 50                                          push eax
+    87 00000088 6A31                                        push dword '1'
+    88 0000008A 68[38000000]                                push dword format_char
+    89 0000008F FF15[00000000]                              call [printf]
+    90 00000095 83C408                                      add esp, 4*2
+    91 00000098 EB1B                                        jmp next1
+    92                                                  is_zero1:
+    93 0000009A 51                                      push ecx
+    94 0000009B 50                                      push eax
+    95 0000009C 833D[34000000]00                        cmp dword [ok], 0
+    96 000000A3 7410                                    je no_print
+    97 000000A5 6A30                                        push dword '0'
+    98 000000A7 68[38000000]                                push dword format_char
+    99 000000AC FF15[00000000]                              call [printf]
+   100 000000B2 83C408                                      add esp, 4*2
+   101                                                  no_print:
+   102                                                  next1:
+   103 000000B5 58                                      pop eax
+   104 000000B6 59                                      pop ecx
+   105 000000B7 E2BF                                loop bits_loop
+   106 000000B9 6A20                            push dword ' '
+   107 000000BB 68[38000000]                    push dword format_char
+   108 000000C0 FF15[00000000]                  call [printf]
+   109 000000C6 83C408                          add esp, 4*2
+   110                                          
+   111 000000C9 EB98                            jmp printing
+   112                                          stop:
+   113                                          
+   114                                      
+   115                                      
+   116                                          ; exit(0)
+   117 000000CB 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+   118 000000CD FF15[00000000]                  call    [exit]       ; call exit to terminate the program
